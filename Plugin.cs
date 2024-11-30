@@ -2,12 +2,9 @@
 using System.Collections.Generic;
 using BepInEx;
 using UnityEngine;
-using Utilla;
 
 namespace Deforestation
 {
-    [ModdedGamemode]
-    [BepInDependency("org.legoandmars.gorillatag.utilla", "1.5.0")]
     [BepInPlugin(PluginInfo.GUID, PluginInfo.Name, PluginInfo.Version)]
     public class Plugin : BaseUnityPlugin
     {
@@ -16,7 +13,9 @@ namespace Deforestation
 
         void Start()
         {
-            Utilla.Events.GameInitialized += OnGameInitialized;
+            if (!PhotonNetwork.InRoom) OnModdedJoined();
+            else if (!NetworkSystem.Instance.GameModeString.Contains("MODDED")) OnModdedLeft();
+            GorillaTagger.OnPlayerSpawned(OnGameInitialized);
         }
 
         void OnEnable()
@@ -29,7 +28,7 @@ namespace Deforestation
             HarmonyPatches.RemoveHarmonyPatches();
         }
 
-        void OnGameInitialized(object sender, EventArgs e)
+        void OnGameInitialized()
         {
             foreach (GameObject obj in Resources.FindObjectsOfTypeAll<GameObject>())
             {
@@ -46,8 +45,7 @@ namespace Deforestation
         {
         }
 
-        [ModdedGamemodeJoin]
-        public void OnJoin(string gamemode)
+        public void OnModdedJoined()
         {
             inRoom = true;
 
@@ -60,8 +58,7 @@ namespace Deforestation
             }
         }
 
-        [ModdedGamemodeLeave]
-        public void OnLeave(string gamemode)
+        public void OnModdedLeft(string gamemode)
         {
             inRoom = false;
 
