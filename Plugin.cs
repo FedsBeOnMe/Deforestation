@@ -2,20 +2,31 @@
 using System.Collections.Generic;
 using BepInEx;
 using UnityEngine;
+using Utilla;
 
 namespace Deforestation
 {
+    [ModdedGamemode]
+    [BepInDependency("org.legoandmars.gorillatag.utilla", "1.5.0")]
     [BepInPlugin(PluginInfo.GUID, PluginInfo.Name, PluginInfo.Version)]
     public class Plugin : BaseUnityPlugin
     {
-        private bool inRoom;
-        private List<GameObject> targetObjects = new List<GameObject>();
+        private bool isInModded = false;
+        private readonly string[] targetNames =
+        {
+            "forestatlas (combined by EdMeshCombinerSceneProcessor)",
+            "fallleaves",
+            "bark (combined by EdMeshCombinerSceneProcessor)",
+            "pinetreebranchsmall (combined by EdMeshCombinerSceneProcessor)",
+            "Bayou_Tree (combined by EdMeshCombinerSceneProcessor)",
+            "Bayou_Tree_Moss (combined by EdMeshCombinerSceneProcessor)",
+            "SwampTree (combined by EdMeshCombinerSceneProcessor)",
+            "RopeSwings"
+        };
 
         void Start()
         {
-            if (!PhotonNetwork.InRoom) OnModdedJoined();
-            else if (!NetworkSystem.Instance.GameModeString.Contains("MODDED")) OnModdedLeft();
-            GorillaTagger.OnPlayerSpawned(OnGameInitialized);
+            Utilla.Events.GameInitialized += OnGameInitialized;
         }
 
         void OnEnable()
@@ -28,47 +39,70 @@ namespace Deforestation
             HarmonyPatches.RemoveHarmonyPatches();
         }
 
-        void OnGameInitialized()
+        void OnGameInitialized(object sender, EventArgs e)
         {
-            foreach (GameObject obj in Resources.FindObjectsOfTypeAll<GameObject>())
-            {
-                if (obj.activeInHierarchy &&
-                    (obj.name == "forestatlas (combined by EdMeshCombinerSceneProcessor)" ||
-                     obj.name.ToLower().Contains("fallleaves")))
-                {
-                    targetObjects.Add(obj);
-                }
-            }
+            Debug.Log("Game initialized.");
         }
 
         void Update()
         {
+            if (isInModded)
+            {
+                DisableTargetObjects();
+            }
         }
 
-        public void OnModdedJoined()
+        [ModdedGamemodeJoin]
+        public void OnJoin(string gamemode)
         {
-            inRoom = true;
+            Debug.Log($"Joined modded gamemode: {gamemode}");
+            isInModded = true;
+            DisableTargetObjects(); // Initial call to handle existing objects
+        }
 
-            foreach (GameObject obj in targetObjects)
+        [ModdedGamemodeLeave]
+        public void OnLeave(string gamemode)
+        {
+            Debug.Log($"Left modded gamemode: {gamemode}");
+            isInModded = false;
+            EnableTargetObjects(); // Re-enable objects when leaving modded
+        }
+
+        private void DisableTargetObjects()
+        {
+            foreach (GameObject obj in Resources.FindObjectsOfTypeAll<GameObject>())
             {
-                if (obj != null)
+                if (obj.activeInHierarchy && MatchesTargetName(obj.name))
                 {
                     obj.SetActive(false);
+                    Debug.Log($"Disabled object: {obj.name}");
                 }
             }
         }
 
-        public void OnModdedLeft(string gamemode)
+        private void EnableTargetObjects()
         {
-            inRoom = false;
-
-            foreach (GameObject obj in targetObjects)
+            foreach (GameObject obj in Resources.FindObjectsOfTypeAll<GameObject>())
             {
-                if (obj != null)
+                if (!obj.activeInHierarchy && MatchesTargetName(obj.name))
                 {
                     obj.SetActive(true);
+                    Debug.Log($"Enabled object: {obj.name}");
                 }
             }
+        }
+
+        private bool MatchesTargetName(string name)
+        {
+            name = name.ToLower();
+            foreach (string targetName in targetNames)
+            {
+                if (name == targetName.ToLower()) // Match exact names
+                {
+                    return true;
+                }
+            }
+            return false;
         }
     }
 }

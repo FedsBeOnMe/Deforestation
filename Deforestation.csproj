@@ -32,6 +32,9 @@
     <Reference Include="Mono.Security">
       <HintPath>$(GameAssemblyPath)\Mono.Security.dll</HintPath>
     </Reference>
+    <Reference Include="Newtilla">
+      <HintPath>..\..\..\Downloads\Newtilla.dll</HintPath>
+    </Reference>
     <Reference Include="Oculus.Platform">
       <HintPath>$(GameAssemblyPath)\Oculus.Platform.dll</HintPath>
     </Reference>
@@ -279,7 +282,7 @@
       <HintPath>$(GameAssemblyPath)\UnityEngine.XRModule.dll</HintPath>
     </Reference>
     <Reference Include="Utilla">
-      <HintPath>$(PluginsPath)\Utilla\Utilla.dll</HintPath>
+      <HintPath>..\..\..\Desktop\Utilla\Utilla.dll</HintPath>
     </Reference>
     <Reference Include="websocket-sharp">
       <HintPath>$(GameAssemblyPath)\websocket-sharp.dll</HintPath>
